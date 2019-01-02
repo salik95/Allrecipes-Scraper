@@ -6,7 +6,7 @@ import time
 data = {}
 
 driver = webdriver.Chrome()
-categ_name = 'cakes'
+categ_name = 'casseroles'
 data[categ_name] = []
 
 with open('JSON/' + categ_name +'.json') as jsonfile:
