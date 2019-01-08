@@ -2,6 +2,7 @@
 import scrapy
 import locale
 import json
+import time
 from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy.http.request import Request
@@ -96,7 +97,7 @@ class RecipeextractorSpider(scrapy.Spider):
 		rest_data['Ingredients'] = ingredients
 
 		try:
-			servings = response.css('[id="servings-button"] [ng-bind="adjustedServings"]::text').extract_first()
+			servings = servings = driver.find_element_by_css_selector('[id="servings-button"] [ng-bind="adjustedServings"]').text
 		except:
 			servings = 'N/A'
 		rest_data['Servings'] = servings
@@ -167,7 +168,8 @@ class RecipeextractorSpider(scrapy.Spider):
 		print('=============================')
 		print(rest_data)
 		print('=============================')
-		data.append(rest_data)
+		data[category_name].append(rest_data)
+		time.sleep(5)
 
 	def spider_closed(self, spider):
 		print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
