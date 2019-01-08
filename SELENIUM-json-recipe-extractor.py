@@ -6,10 +6,10 @@ import time
 data = {}
 
 driver = webdriver.Chrome()
-categ_name = 'candy-and-fudge'
+categ_name = 'macaroni-and-cheese'
 data[categ_name] = []
 
-with open('JSON/' + categ_name +'.json') as jsonfile:
+with open('JSON Recipe URL/' + categ_name +'.json') as jsonfile:
 	url_list = json.load(jsonfile)[categ_name]
 	print('Total enteries: ', len(url_list))
 	print('======================')
