@@ -15,9 +15,12 @@ recipe_url = []
 
 category_name = 'bread'
 
+data = {}
+data[category_name] = []
+
 class RecipeextractorSpider(scrapy.Spider):
 	name = 'recipeextractor'
-	start_urls = ['https://www.google.com/']
+	start_urls = recipe_url
 
 	def __init__(self):
 		dispatcher.connect(self.spider_closed, signals.spider_closed)
@@ -164,10 +167,10 @@ class RecipeextractorSpider(scrapy.Spider):
 		print('=============================')
 		print(rest_data)
 		print('=============================')
+		data.append(rest_data)
 
 	def spider_closed(self, spider):
 		print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
-		# for item in recipe_url:
-		# 	print(item)
-		# print(len(recipe_url))
+		with open(category_name + '.json', 'w') as fp:
+			json.dump(data, fp)
 		print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
