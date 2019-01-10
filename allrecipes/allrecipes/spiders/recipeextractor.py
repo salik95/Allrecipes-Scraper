@@ -50,8 +50,17 @@ class RecipeextractorSpider(scrapy.Spider):
 		nutritional_information = {}
 		nutritions = []
 		try:
-			driver.get(response.url)
-			driver.find_element_by_class_name('see-full-nutrition').click()
+			while 1:
+				try:
+					driver.get(response.url)
+					break
+				except:
+					continue
+			try:
+				driver.find_element_by_class_name('see-full-nutrition').click()
+			except:
+				driver.refresh()
+				driver.find_element_by_class_name('see-full-nutrition').click()
 			driver.implicitly_wait(50)
 			nutrition_raw = driver.find_elements_by_css_selector('div.recipe-nutrition div.nutrition-body div.nutrition-row')
 			for nu in nutrition_raw:
@@ -142,33 +151,48 @@ class RecipeextractorSpider(scrapy.Spider):
 		rest_data['Chef Remarks'] = chef_remarks
 
 		try:
-			total_ratings = response.css('[id="reviews"] ol li .helpful-header::text').extract_first()
+			total_ratings = response.css('[id="reviews"] ol li .helpful-header::text').extract_first().split(" ")[0]
 		except:
 			total_ratings = 'N/A'
 		try:
 			star_ratings_raw = response.css('[id="reviews"] ol li div::attr(title)').extract()
 			star_ratings = {}
 			for item in star_ratings_raw:
-				if 'loved it' in item:
-					star_ratings['5 stars (cooks loved it!)'] = item.split(' ')[0]
-				elif 'liked it' in item:
-					star_ratings['4 stars (cooks liked it!)'] = item.split(' ')[0]
-				elif 'it was OK' in item:
-					star_ratings['3 stars (cooks thought it was OK)'] = item.split(' ')[0]
-				elif 'didn\'t like it' in item:
-					star_ratings['2 stars (cooks didn\'t like it)'] = item.split(' ')[0]
-				elif 'couldn\'t eat it' in item:
-					star_ratings['1 star (cooks couldn\'t eat it)'] = item.split(' ')[0]
+				try:
+					if 'loved it' in item:
+						star_ratings['5 stars (cooks loved it!)'] = item.split(' ')[0]
+				except:
+					star_ratings['5 stars (cooks loved it!)'] = 'N/A'
+				try:
+					if 'liked it' in item:
+						star_ratings['4 stars (cooks liked it!)'] = item.split(' ')[0]
+				except:
+					star_ratings['4 stars (cooks liked it!)'] = 'N/A'
+				try:
+					if 'it was OK' in item:
+						star_ratings['3 stars (cooks thought it was OK)'] = item.split(' ')[0]
+				except:
+					star_ratings['3 stars (cooks thought it was OK)'] = 'N/A'
+				try:
+					if 'didn\'t like it' in item:
+						star_ratings['2 stars (cooks didn\'t like it)'] = item.split(' ')[0]
+				except:
+					star_ratings['2 stars (cooks didn\'t like it)'] = 'N/A'
+				try:
+					if 'couldn\'t eat it' in item:
+						star_ratings['1 star (cooks couldn\'t eat it)'] = item.split(' ')[0]
+				except:
+					star_ratings['1 star (cooks couldn\'t eat it)'] = 'N/A'
 		except:
 			star_ratings = 'N/A'
-		ratings = {'Total Number of Ratings' : total_ratings.split(" ")[0], 'Cook Ratings' : star_ratings}
+		ratings = {'Total Number of Ratings' : total_ratings, 'Cook Ratings' : star_ratings}
 		rest_data['Ratings'] = ratings
 
 		rest_data['Recipe URL'] = response.url
 		print('=============================')
-		print(rest_data)
-		print('=============================')
 		data[category_name].append(rest_data)
+		print('Status: ', len(data[category_name]), '/', len(recipe_url))
+		print('=============================')
 		time.sleep(5)
 
 	def spider_closed(self, spider):
