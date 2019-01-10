@@ -49,19 +49,20 @@ class RecipeextractorSpider(scrapy.Spider):
 
 		nutritional_information = {}
 		nutritions = []
+		retry_count = 0
 		try:
 			while 1:
+				if retry_count > 30:
+					break
 				try:
 					driver.get(response.url)
+					driver.find_element_by_class_name('see-full-nutrition').click()
 					break
 				except:
+					retry_count = retry_count + 1
 					continue
-			try:
-				driver.find_element_by_class_name('see-full-nutrition').click()
-			except:
-				driver.refresh()
-				driver.find_element_by_class_name('see-full-nutrition').click()
-			driver.implicitly_wait(50)
+
+			driver.implicitly_wait(5)
 			nutrition_raw = driver.find_elements_by_css_selector('div.recipe-nutrition div.nutrition-body div.nutrition-row')
 			for nu in nutrition_raw:
 				try:
