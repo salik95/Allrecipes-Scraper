@@ -50,52 +50,57 @@ class RecipeextractorSpider(scrapy.Spider):
 		nutritional_information = {}
 		nutritions = []
 		retry_count = 0
-		try:
-			while 1:
-				if retry_count > 30:
-					break
-				try:
-					driver.get(response.url)
-					driver.find_element_by_class_name('see-full-nutrition').click()
-					break
-				except:
-					retry_count = retry_count + 1
-					continue
-
-			driver.implicitly_wait(5)
-			nutrition_raw = driver.find_elements_by_css_selector('div.recipe-nutrition div.nutrition-body div.nutrition-row')
-			for nu in nutrition_raw:
-				try:
-					nu_name = nu.find_element_by_css_selector('.nutrient-name').text
+		while 1:
+			if retry_count > 30:
+				break
+			try:
+				driver.get(response.url)
+				driver.find_element_by_class_name('see-full-nutrition').click()
+				break
+			except:
+				retry_count = retry_count + 1
+				continue
+		
+		bad_nutrition_checker = response.css('h2[id="top-nav-heading"]::text').extract_first()
+		if bad_nutrition_checker is None or bad_nutrition_checker == '':
+			try:
+				driver.implicitly_wait(5)
+				nutrition_raw = driver.find_elements_by_css_selector('div.recipe-nutrition div.nutrition-body div.nutrition-row')
+				for nu in nutrition_raw:
 					try:
-						nu_value = nu_name.split(":")[1].strip()
+						nu_name = nu.find_element_by_css_selector('.nutrient-name').text
+						try:
+							nu_value = nu_name.split(":")[1].strip()
+						except:
+							nu_value = '-'
+						nu_name = nu_name.split(":")[0].strip()
 					except:
-						nu_value = '-'
-					nu_name = nu_name.split(":")[0].strip()
-				except:
-					nu_name = 'None'
-					nu_value = 'None'
-				try:
-					if "daily-value" in nu.get_attribute('innerHTML'):
-						nu_daily_value = nu.find_element_by_css_selector('.daily-value').text
-					else:
+						nu_name = 'None'
+						nu_value = 'None'
+					try:
+						if "daily-value" in nu.get_attribute('innerHTML'):
+							nu_daily_value = nu.find_element_by_css_selector('.daily-value').text
+						else:
+							nu_daily_value = 'None'
+					except:
 						nu_daily_value = 'None'
-				except:
-					nu_daily_value = 'None'
-				nutritions.append([nu_name, nu_value, nu_daily_value])
-		except:
+					nutritions.append([nu_name, nu_value, nu_daily_value])
+			except:
+				nutritions = 'N/A'
+			try:
+				cals = driver.find_element_by_css_selector('[id = "nutrition-button"] span.calorie-count span').text
+			except:
+				cals = 'N/A'
+			try:
+				driver.find_element_by_css_selector("div.ngdialog-header .close-button").click()
+			except:
+				pass
+		else:
 			nutritions = 'N/A'
-		try:
-			cals = driver.find_element_by_css_selector('[id = "nutrition-button"] span.calorie-count span').text
-		except:
 			cals = 'N/A'
 		nutritional_information['calories'] = cals
 		nutritional_information['nutritions'] = nutritions
 		rest_data['Nutritional Information'] = nutritional_information
-		try:
-			driver.find_element_by_css_selector("div.ngdialog-header .close-button").click()
-		except:
-			pass
 
 		try:
 			ingredients_raw = response.css('[itemprop="recipeIngredient"]::text').extract()
@@ -107,9 +112,13 @@ class RecipeextractorSpider(scrapy.Spider):
 		rest_data['Ingredients'] = ingredients
 
 		try:
-			servings = servings = driver.find_element_by_css_selector('[id="servings-button"] [ng-bind="adjustedServings"]').text
+			servings = driver.find_element_by_css_selector('[id="servings-button"] [ng-bind="adjustedServings"]').text
 		except:
-			servings = 'N/A'
+			driver.refresh()
+			driver.refresh()
+			servings = driver.find_element_by_css_selector('[id="servings-button"] [ng-bind="adjustedServings"]').text
+			if servings is None or servings == '':
+				servings = 'N/A'
 		rest_data['Servings'] = servings
 
 		try:
